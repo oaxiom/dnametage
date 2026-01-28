@@ -22,28 +22,47 @@ class methyl_age:
         _ = logging.getLogger('fontTools.subset').setLevel(logging.WARNING) # Another rogue logger
         
         self.cpgs = None # aka betas
+        self.metadata = None
+        self.sample_names = None
+        self.ages = None
 
-    def load_cpgs_tsv(self, filename, gzipped=False):
+    def load_cpgs_tsv(self, filename, gzipped=False, header=True, force_tsv=True):
         """
         Load the cpg files in the form:
         
         <identifier> <sample1> ... <samplen>
         
         """
+        form = {'id': 0}
         
-        format = {}
+        if header:
+            form.update({'skiplines': 1})
         
-        if gzipped:
-            oh = gzip.open(filename, 'rt')
-        else:
-            oh = open(filename, 'rt')
-            
-        for line in oh:
-            pass    
+        self.cpgs = miniglbase.expression(filename=filename, format=form, 
+            expn='column[1:]', force_tsv=force_tsv, gzip=gzipped)
         
-        oh.close()
+        print(self.cpgs)
+
+    def load_metadata(self, filename, gzipped=True, format=None, force_tsv=True):
+        """
+        Load the meta data.
         
-    
+        Must have two columns specified by the format specifier.
+        
+        sample_name (must match the cpg table condition names
+        age
+        
+        other columns are optional.
+        
+        """
+        assert self.cpgs, 'You must load the cpg table first'
+        assert 'age' in format, 'format needs an age key'
+        assert 'sample_name' in format, 'format needs a sample_name key'
+        
+        self.metadata = miniglbase.genelist(filename=filename, format=format, gzip=gzipped, force_tsv=force_tsv)
+        
+        # sanity checking on the metadata
+        print(self.metadata)
 
     def setup(self, cpgs,
                    plot_filename: str,

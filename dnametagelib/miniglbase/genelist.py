@@ -316,6 +316,9 @@ class genelist(_base_genelist):
             self.__deathline = column # For debugging purposes
             self.__deathindx = index
 
+            if index <= skiplines:
+                continue
+
             if not column: # if row is completely empty, so just omit.
                 continue
 

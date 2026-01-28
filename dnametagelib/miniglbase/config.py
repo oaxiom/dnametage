@@ -35,6 +35,8 @@ PRINT_LAST_ITEM = True
 # If this is changed then glload will not work correctly.
 bucket_size = 10000 # in bp - tested, seems a reasonable choice.
 
+draw_size = (6,5)
+
 # -------------- set up the logger here.
 logging.basicConfig(level=logging.DEBUG,
                     format='%(levelname)-8s: %(message)s',

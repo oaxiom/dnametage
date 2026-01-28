@@ -247,7 +247,21 @@ class _base_genelist:
         d = {}
         for key in format:
             if key not in ignorekeys: # ignore these tags
-                if isinstance(format[key], str) and "location" in format[key]:
+                #if not key in d:
+                #    d[key] = {}
+                if '__ignore_empty_columns' in format and format['__ignore_empty_columns']:
+                    # check the column exists, if not, pad in an empty value
+                    try:
+                        column[format[key]]
+                    except IndexError:
+                        d[key] = '' # Better than None for downstream compatability
+                        continue
+
+                if isinstance(format[key], dict) and "code" in format[key]:
+                    # a code block insertion goes here - any valid lib and one line python code fragment
+                    # store it as a dict with the key "code"
+                    d[key] = eval(format[key]["code"])
+                elif isinstance(format[key], str) and "location" in format[key]:
                     # locations are very common, add support for them out of the box:
                     d[key] = eval(format[key])
                 else:

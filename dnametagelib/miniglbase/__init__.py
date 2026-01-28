@@ -6,9 +6,6 @@ Requires:
 * numpy
 * matplotlib
 * scipy
-* sklearn
-* h5py
-* networkx
 """
 
 import sys, os
@@ -47,9 +44,11 @@ from .location import location
 from .genelist import genelist
 from .progress import progressbar
 from .delayedlist import delayedlist
+from .expression import expression
 
 # export all of the libraries, methods and helpers.
 __all__ = ["genelist",
+            "expression",
             'config',
             "location",
             "glload",

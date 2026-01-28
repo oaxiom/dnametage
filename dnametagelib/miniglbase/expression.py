@@ -35,13 +35,12 @@ from .base_expression import base_expression
 from .draw import draw
 from .progress import progressbar
 from .errors import AssertionError, ArgumentError
-from .genelist import genelist, Genelist # Name mangling for the win!
+from .genelist import genelist # Name mangling for the win!
 from .location import location
 from .stats import stats
 
 if config.NETWORKX_AVAIL and config.PYGRAPHVIZ_AVAIL:
     from .network import network
-
 
 class expression(base_expression):
     def __init__(self,
@@ -132,8 +131,7 @@ class expression(base_expression):
     def __repr__(self):
         return "glbase.expression"
 
-    @staticmethod
-    def __str_helper(index):
+    def __str_helper(self, index):
         item = []
         for key in self.linearData[index]:
             if key == 'conditions':
