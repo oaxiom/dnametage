@@ -1,9 +1,9 @@
 
 import math
 import logging
+import gzip
 
-
-
+from . import miniglbase
 from . import preprocess
 from .clock_data import clocks # coefficients are the values;
 
@@ -20,6 +20,30 @@ class methyl_age:
         
         _ = logging.getLogger('matplotlib').setLevel(logging.WARNING) # Bodge to silence the matplotlib logging
         _ = logging.getLogger('fontTools.subset').setLevel(logging.WARNING) # Another rogue logger
+        
+        self.cpgs = None # aka betas
+
+    def load_cpgs_tsv(self, filename, gzipped=False):
+        """
+        Load the cpg files in the form:
+        
+        <identifier> <sample1> ... <samplen>
+        
+        """
+        
+        format = {}
+        
+        if gzipped:
+            oh = gzip.open(filename, 'rt')
+        else:
+            oh = open(filename, 'rt')
+            
+        for line in oh:
+            pass    
+        
+        oh.close()
+        
+    
 
     def setup(self, cpgs,
                    plot_filename: str,
@@ -36,6 +60,7 @@ class methyl_age:
         :param imputation:
         :return:
         """
+        assert self.cpgs, 'CpG data not found'
         assert clock in clocks, f'{clock} was not found in the valid clocks: {clocks.keys()}'
     
         # Preprocessing
