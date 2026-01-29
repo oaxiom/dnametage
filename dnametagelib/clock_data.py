@@ -9,12 +9,14 @@ clock_files = {
     'Horvath_2013': {
         'coef': {
             'filename': "./data/13059_2013_3156_MOESM3_ESM.csv.gz",
-            'form': {"id": 0, "coef": 1, "skiptill": "(Intercept)"},
+            'form': {"id": 0, "coef": 1, "skiplines": 2},
+            'intercept': None,
             'postprocess': None,
             },
         'goldstandard': {
             'filename': "./data/13059_2013_3156_MOESM22_ESM.csv.gz",
             'form': {"id": 0, "goldstandard": 6},
+            'intercept': None,
             'postprocess': None,
             },
         },

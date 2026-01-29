@@ -164,23 +164,38 @@ class methyl_age:
     
         clock_data = self.clocks.get(clock)
         
-        print(clock_data)
+        print(clock_data['coef'])
+        
+        # get only the matching ids;
+        matched = clock_data['coef'].map(genelist=self.cpgs, key='id') # This will delete the intercept row
+        
+        print(matched)
+        print(matched.getConditionNames())
+        # TODO Sanity checking for decent overlap %
     
         # matrix multiplication
-        cpg_array = self.cpgs.getExpressionTable()
+        cpg_array = matched.getExpressionTable()
         
-        m_age = cpg_array * clocks[clock] # matrix(data=clocks[rownames(betas)])
+        intercept = clock_data['coef'][0]['coef'] # intercept
+        
+        #print(cpg_array.T[0][0])
+        #print(numpy.array(matched['coef'])[0])
+        #print(intercept)
+        m_age = (cpg_array.T * numpy.array(matched['coef']))   # matrix(data=clocks[rownames(betas)])
+
+        #print(m_age[0][0])
+
+        m_age = numpy.sum(m_age, axis=1) + intercept
     
         ## post transformation
-        if clock in ('HorvathS2013', 'ShirebyG2020', 'HorvathS2018', 'McEwenL2019', 'PCHorvathS2013', 'PCHorvathS2018'):
-    
-            def Horvath2013_transform(x):
-                if x > 0:
-                    x = x * (20 + 1) + 20
+        if clock in ('Horvath_2013', 'ShirebyG2020', 'HorvathS2018', 'McEwenL2019', 'PCHorvathS2013', 'PCHorvathS2018'):
+            def anti_trafo(x, adult_age=20):
+                if x < 0:
+                    return (1+adult_age) * math.exp(x) - 1
                 else:
-                    x = math.exp(x + math.log(20 + 1)) - 1
+                    return (1+adult_age) * x + adult_age
     
-            m_age[:, 1] = sapply(m_age[:, 1], HorvathS2013_transform)
+            predAge = [anti_trafo(x) for x in m_age]
     
         '''
         elif clock in ('CBL_specific', 'CBL_common', 'Cortex_common'):
@@ -216,60 +231,15 @@ class methyl_age:
             m_age[, 1] < - r_adult_age * (y_ASM + y_gestation) - y_gestation
     
         '''
-    
-        ## calculate age acceleration
-        """
-        warning_message = "\n'age_info' should be a dataframe which contains sample ID and age information, like:\nSample\tAge\nname1\t30\nname2\t60\nname3\t40\nAge acceleration will not be calculated."
-        if insintance(age_info, list):
-    
-        if (all(c('Sample', 'Age') % in % colnames(age_info))){
-            m_age < - merge(age_info, m_age, by='Sample', sort=FALSE)
-            if (nrow(m_age) < 1){
-                stop(message("Colnames of the input beta dataframe do not match any of the values of the 'Sample' column in age_info!"))
-            }
-            if (clock == 'PCGrimAge'){
-                if ('Sex' % in %colnames(age_info)){
-                    # m_age$is_Female <- NA
-                    m_age$is_Female < - gsub('^F.*', 1, m_age$Sex)
-                    m_age$is_Female < - gsub('^M.*', 0, m_age$is_Female)
-                    m_age$is_Female < - as.numeric(m_age$is_Female)
-    
-                    m_age$mAge < - m_age$mAge + as.matrix(m_age[, c('is_Female', 'Age')]) % * %PCGrimAge_agesex$PCGrimAge
-                } else {
-                stop(message("\nTo calculate 'PCGrimage', 'age_info' should include a 'Sex' column that contains binary sex annotation, i.e. either Female or Male."))
-                }
-            }
-    
-            if ("Color" % in %colnames(age_info)){
-                point_color < - m_age$Color
-            } else {
-                point_color < - NA
-            }
-    
-            if ("Shape" % in %colnames(age_info)){
-                point_pch < - m_age$Shape
-            } else {
-                point_pch < - NA
-            }
-    
-            m_age$Age_Acceleration < - NA
-            m_age$Age_Acceleration[! is.na(m_age$Age)] < - getAccel(m_age$Age[! is.na(m_age$Age)], m_age$mAge[! is.na(m_age$Age)], , method=fit_method, title=clock, do_plot=do_plot, point_color=point_color, point_shape=point_pch, simple=plot_simple, x_lim=x_lim, y_lim=y_lim)
-            } else {
-            warning(message("\nThe colnames of age_info should include both 'Sample' and 'Age', like:\nSample\tAge\nname1\t30\nname2\t60\nname3\t40\nAge\nAge acceleration will not be calculated."))
-            }
-    
-            } else if (is.na(age_info[1])){
-            if (clock == 'PCGrimAge'){
-            stop(message("\nTo calculate 'PCGrimage': \n'age_info' should be a dataframe which contains sample ID, age, sex information, like:\nSample\tAge\tSex\nname1\t30\tFemale\nname2\t60\tMale\nname3\t40\tFemale\n"))
-            }
-    
-         } else {
-            warning(message(warning_message))
-        }
-        """
         
         ## save results
         self.predicted_ages = m_age # data.frame(Sample=m_age, mAge=m_age)
+        
+        # get a table;
+        load_list = [{'id': id, 'predage': predage, 'actual_age': age} for id, predage, age in zip(matched['id'], predAge, self.metadata['age'])]
     
-        return m_age
+        gl = miniglbase.genelist()
+        gl.load_list(load_list)
+        
+        return gl
     
