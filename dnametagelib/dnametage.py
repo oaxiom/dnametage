@@ -2,6 +2,7 @@
 import math
 import logging
 import gzip
+import numpy
 
 from . import miniglbase
 from . import preprocess
@@ -25,6 +26,7 @@ class methyl_age:
         self.metadata = None
         self.sample_names = None
         self.ages = None
+        self.clocks = clocks()
 
     def load_cpgs_tsv(self, filename, gzipped=False, header=True, force_tsv=True):
         """
@@ -40,8 +42,6 @@ class methyl_age:
         
         self.cpgs = miniglbase.expression(filename=filename, format=form, 
             expn='column[1:]', force_tsv=force_tsv, gzip=gzipped)
-        
-        print(self.cpgs)
 
     def load_metadata(self, filename, gzipped=True, format=None, force_tsv=True):
         """
@@ -62,11 +62,23 @@ class methyl_age:
         self.metadata = miniglbase.genelist(filename=filename, format=format, gzip=gzipped, force_tsv=force_tsv)
         
         # sanity checking on the metadata
-        print(self.metadata)
+        assert len(self.metadata) == len(self.cpgs.getConditionNames()), "the sample_names don't match the sizes of the cpg table"
+        
+        # convert the sample_names into a more useful order.
+        self.map_sample_age = {}
+        for data in self.metadata:
+            self.map_sample_age[data['sample_name']] = data['age']
+            
+        # check the cpgs accessions
+        if not self.cpgs['id'][0].startswith('cg'):
+            self.log.warning('CpG sites do not start with cg, probably you will need to run remap_site_to_genome()')
+        
+    def remap_site_to_genome():
+        """
+        """
+        self.log.error('remap_site_to_genome is not implemented')
 
-    def setup(self, cpgs,
-                   plot_filename: str,
-                   clock: str,
+    def run(self,  clock: str,
                    fit_meth: str = 'linear',
                    imputation: bool = True,
                    ):
@@ -80,16 +92,16 @@ class methyl_age:
         :return:
         """
         assert self.cpgs, 'CpG data not found'
-        assert clock in clocks, f'{clock} was not found in the valid clocks: {clocks.keys()}'
+        assert clock in self.clocks, f'{clock} was not found in the valid clocks: {clocks.keys()}'
     
         # Preprocessing
-        is_beta = True
-        x_lim = [0, 100]
-        y_lim = [0, 100]
+        self.is_beta = True
+        self.x_lim = [0, 100] # suggested sizes for scatters
+        self.y_lim = [0, 100]
     
         if clock == 'Horvath_2013':
             self.log.info('Preprocess Horvath2013 clock')
-            cpgs = preprocess.horvath2013(cpgs, normalizeData=True)
+            #cpgs = preprocess.horvath2013(self.cpgs, normalizeData=True)
     
         '''
         elif clock == 'ZhangQ2019':
@@ -118,12 +130,14 @@ class methyl_age:
                 imputation = False
                 log.warning('When clock == Lu clocks, imputation is set to False')
         '''
-    
+        """
         # Free the Y limits in plotting
         if clock in ('YangZ2016', 'ZhangY2017', 'LuA2019', 'FuentealbaM2025'):
             y_lim = None
-    
-        if is_beta:
+        """
+        """
+        
+        if self.is_beta:
             # This is the intersect
             r_coefs = coefs
             # data('HorvathS2013')
@@ -136,7 +150,8 @@ class methyl_age:
             missing_probe = setdiff(names(coefs), rownames(betas))
             if len(missing_probe) > 0:
                 log.warning("Found ", len(missing_probe), "out of", len(coefs), "probes missing! They will be assigned with mean values from reference dataset, missing probes are:\n ", missing_probe)
-    
+        """
+        """
         if imputation:
             ## Mean imputation
             data(list='golden_ref', envir=environment())
@@ -145,9 +160,16 @@ class methyl_age:
             betas = mean_imputation(mt=betas, ref=ref_mean, only_ref_rows=FALSE)
         else:
             betas[betas != None] = 0
+        """
+    
+        clock_data = self.clocks.get(clock)
+        
+        print(clock_data)
     
         # matrix multiplication
-        m_age = t(betas) * matrix(data=clocks[rownames(betas)])
+        cpg_array = self.cpgs.getExpressionTable()
+        
+        m_age = cpg_array * clocks[clock] # matrix(data=clocks[rownames(betas)])
     
         ## post transformation
         if clock in ('HorvathS2013', 'ShirebyG2020', 'HorvathS2018', 'McEwenL2019', 'PCHorvathS2013', 'PCHorvathS2018'):
@@ -245,8 +267,9 @@ class methyl_age:
             warning(message(warning_message))
         }
         """
+        
         ## save results
-        m_age = data.frame(Sample=m_age, mAge=m_age)
+        self.predicted_ages = m_age # data.frame(Sample=m_age, mAge=m_age)
     
         return m_age
     
