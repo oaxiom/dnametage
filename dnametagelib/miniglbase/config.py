@@ -36,6 +36,9 @@ PRINT_LAST_ITEM = True
 bucket_size = 10000 # in bp - tested, seems a reasonable choice.
 
 draw_size = (6,5)
+draw_aspect = 'medium'
+draw_mode = 'pdf'
+valid_draw_modes = set(['pdf', 'png'])
 
 # -------------- set up the logger here.
 logging.basicConfig(level=logging.DEBUG,

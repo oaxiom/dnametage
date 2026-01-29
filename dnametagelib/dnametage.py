@@ -27,6 +27,7 @@ class methyl_age:
         self.sample_names = None
         self.ages = None
         self.clocks = clocks()
+        self.draw = None
 
     def load_cpgs_tsv(self, filename, gzipped=False, header=True, force_tsv=True):
         """
@@ -241,5 +242,32 @@ class methyl_age:
         gl = miniglbase.genelist()
         gl.load_list(load_list)
         
+        self.final_data = gl
+        
         return gl
+        
+    def scatter(self, filename):
+        """
+        Draw a scatter of pred age versus actual age;
+        
+        """
+        assert self.final_data, 'run() has not completed'
     
+        if not self.draw:
+            self.draw = miniglbase.draw.draw()
+            
+        fig = self.draw.getfigure()
+        ax = fig.add_subplot(111)
+        
+        x = self.final_data['predage']
+        y = self.final_data['actual_age']
+        
+        ax.scatter(x, y)
+        
+        ax.set_xlim([0,100])
+        ax.set_ylim([0,100])
+        
+        self.draw.savefigure(fig, filename)
+        
+        
+        

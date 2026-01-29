@@ -11,4 +11,6 @@ dnamet.load_metadata('../test_data/Horvath2013/gb-2013-14-10-r115-S27.csv.gz', f
 
 data = dnamet.run('Horvath_2013', )
 
-data.saveTSV('../test_01.result.tsv', key_order=['id'])
+data.saveTSV('test_01.result.tsv', key_order=['id'])
+
+dnamet.scatter('test_01.scatter.pdf')
