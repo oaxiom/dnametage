@@ -74,10 +74,12 @@ class methyl_age:
         if not self.cpgs['id'][0].startswith('cg'):
             self.log.warning('CpG sites do not start with cg, probably you will need to run remap_site_to_genome()')
         
-    def remap_site_to_genome():
+    def remap_site_to_genome(self, ):
         """
         """
         self.log.error('remap_site_to_genome is not implemented')
+
+
 
     def run(self,  clock: str,
                    fit_meth: str = 'linear',
