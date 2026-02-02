@@ -8,13 +8,13 @@ clock_files = {
     #https://static-content.springer.com/esm/art%3A10.1186%2Fgb-2013-14-10-r115/MediaObjects/13059_2013_3156_MOESM22_ESM.csv # reference featurs
     'Horvath_2013': {
         'coef': {
-            'filename': "./data/13059_2013_3156_MOESM3_ESM.csv.gz",
+            'filename': "data/13059_2013_3156_MOESM3_ESM.csv.gz",
             'form': {"id": 0, "coef": 1, "skiplines": 2},
             'intercept': None,
             'postprocess': None,
             },
         'goldstandard': {
-            'filename': "./data/13059_2013_3156_MOESM22_ESM.csv.gz",
+            'filename': "data/13059_2013_3156_MOESM22_ESM.csv.gz",
             'form': {"id": 0, "goldstandard": 6},
             'intercept': None,
             'postprocess': None,

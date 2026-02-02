@@ -1,10 +1,11 @@
 
+import os
 import math
 import logging
 import gzip
 import numpy
 
-from . import miniglbase
+from .miniglbase import genelist, glload, expression, draw
 from . import preprocess
 from .clock_data import clocks # coefficients are the values;
 
@@ -28,6 +29,7 @@ class methyl_age:
         self.ages = None
         self.clocks = clocks()
         self.draw = None
+        self.epicv2 = None
 
     def load_cpgs_tsv(self, filename, gzipped=False, header=True, force_tsv=True):
         """
@@ -41,7 +43,7 @@ class methyl_age:
         if header:
             form.update({'skiplines': 1})
         
-        self.cpgs = miniglbase.expression(filename=filename, format=form, 
+        self.cpgs = expression(filename=filename, format=form,
             expn='column[1:]', force_tsv=force_tsv, gzip=gzipped)
 
     def load_metadata(self, filename, gzipped=True, format=None, force_tsv=True):
@@ -60,7 +62,7 @@ class methyl_age:
         assert 'age' in format, 'format needs an age key'
         assert 'sample_name' in format, 'format needs a sample_name key'
         
-        self.metadata = miniglbase.genelist(filename=filename, format=format, gzip=gzipped, force_tsv=force_tsv)
+        self.metadata = genelist(filename=filename, format=format, gzip=gzipped, force_tsv=force_tsv)
         
         # sanity checking on the metadata
         assert len(self.metadata) == len(self.cpgs.getConditionNames()), "the sample_names don't match the sizes of the cpg table"
@@ -73,13 +75,33 @@ class methyl_age:
         # check the cpgs accessions
         if not self.cpgs['id'][0].startswith('cg'):
             self.log.warning('CpG sites do not start with cg, probably you will need to run remap_site_to_genome()')
-        
-    def remap_site_to_genome(self, ):
-        """
-        """
-        self.log.error('remap_site_to_genome is not implemented')
 
+    def __bsmap_rat_load(self, filename: str):
+        form = {'loc': 'location(chr=column[0], left=int(column[1])+1, right=int(column[1])+1)',
+                'ratio': 4}
+        return delayedlist(filename=filename, format=form, force_tsv=True, gzip=True)
 
+    def remap_site_to_genome(self, filename: str, input_format: str):
+        """
+
+        """
+        assert input_format in ('bsmap'), f'{input_format} is not a valid input format, only bsmap has been implemented'
+
+        self.log.error('Not implemented')
+        return None
+
+        if input_format == 'bsmap':
+            data = self.__bsmap_rat_load(filename=filename)
+            self.log.info('Loaded bsmap meth_ratio format file')
+
+        if not self.epicv2:
+            script_path = os.path.dirname(os.path.realpath(__file__))
+
+            self.epicv2 = glload(filename=os.path.join(script_path, 'annotations/EPIVv2_annotations.glb'))
+            self.log.info('Loaded EPICv2.hg38.manifest data')
+
+        mapped = self.epicv2.map(genelist=data, key='loc')
+        return mapped
 
     def run(self,  clock: str,
                    fit_meth: str = 'linear',
@@ -241,7 +263,7 @@ class methyl_age:
         # get a table;
         load_list = [{'id': id, 'predage': predage, 'actual_age': age} for id, predage, age in zip(matched['id'], predAge, self.metadata['age'])]
     
-        gl = miniglbase.genelist()
+        gl = genelist()
         gl.load_list(load_list)
         
         self.final_data = gl
@@ -256,7 +278,7 @@ class methyl_age:
         assert self.final_data, 'run() has not completed'
     
         if not self.draw:
-            self.draw = miniglbase.draw.draw()
+            self.draw = draw.draw()
             
         fig = self.draw.getfigure()
         ax = fig.add_subplot(111)
