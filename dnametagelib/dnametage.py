@@ -193,11 +193,15 @@ class methyl_age:
         
         # get only the matching ids;
         matched = clock_data['coef'].map(genelist=self.cpgs, key='id') # This will delete the intercept row
-        
-        print(matched)
-        print(matched.getConditionNames())
+
         # TODO Sanity checking for decent overlap %
-    
+
+        percent_clock_probes_matched = (len(matched) / len(clock_data['coef'])) * 100
+        self.log.info(f'{percent_clock_probes_matched:.1f}% probes matched')
+        if percent_clock_probes_matched < 90:
+            self.log.warning('Less than 90% of probes matched!')
+            self.log.warning('Suggest imputation of missing probes')
+
         # matrix multiplication
         cpg_array = matched.getExpressionTable()
         
