@@ -47,6 +47,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 _ = logging.getLogger('matplotlib').setLevel(logging.WARNING)  # Bodge to silence the matplotlib logging
 _ = logging.getLogger('fontTools.subset').setLevel(logging.WARNING)  # Another rogue logger
+_ = logging.getLogger('fontTools').setLevel(logging.WARNING)  # Another rogue logger
 
 log = logging.getLogger('miniglbase3')
 log.setLevel(logging.INFO)

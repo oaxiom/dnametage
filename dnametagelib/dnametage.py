@@ -261,7 +261,7 @@ class methyl_age:
         self.predicted_ages = m_age # data.frame(Sample=m_age, mAge=m_age)
         
         # get a table;
-        load_list = [{'id': id, 'predage': predage, 'actual_age': age} for id, predage, age in zip(matched['id'], predAge, self.metadata['age'])]
+        load_list = [{'id': id, 'predage': predage, 'actual_age': age} for id, predage, age in zip(matched.getConditionNames(), predAge, self.metadata['age'])]
     
         gl = genelist()
         gl.load_list(load_list)
