@@ -176,16 +176,18 @@ class methyl_age:
         if imputation:
             self.log.info('Imputing missing probes')
             # missing probes;
-            print(clock_data['goldstandard'])
+            print(matched)
             found_probes = set(matched['id'])
             all_probes = set(clock_data['coef']['id'])
             missing_probes = all_probes - found_probes
+            num_conds = len(matched.getConditionNames())
             self.log.info(f'Missing probes = {len(missing_probes)}')
             # simple impute: fill with 0.5
             for missing_probe in missing_probes:
                 coef = clock_data['coef'].getRowsByKey(key='id', values=missing_probe, silent=True)[0]['coef']
                 missing_data = clock_data['goldstandard'].getRowsByKey(key='id', values=missing_probe, silent=True)[0]['goldstandard']
                 matched.linearData.append({'id': missing_probe, 'coef': coef, 'score': [missing_data] * num_conds})
+            matched._optimiseData()
 
         elif percent_clock_probes_matched < 90:
             self.log.warning('Less than 90% of probes matched!')
@@ -280,15 +282,15 @@ class methyl_age:
         y = self.final_data['actual_age']
         
         ax.scatter(x, y)
-        
+
+        ax.plot([0, 100], [0, 100],  c='lightgrey')
+
         ax.set_xlim([0,100])
         ax.set_ylim([0,100])
 
         ax.set_xlabel('Predicted Age')
         ax.set_ylabel('Chronological Age')
         ax.set_title(self.clock_used)
-
-        ax.plot([0,100], [0,100], ls=':', c='lightgrey')
 
         self.draw.savefigure(fig, filename)
         
