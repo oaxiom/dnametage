@@ -104,15 +104,11 @@ class methyl_age:
         return mapped
 
     def run(self,  clock: str,
-                   fit_meth: str = 'linear',
                    imputation: bool = True,
                    ):
         """
     
-        :param betas:
-        :param plot_filename:
         :param clock:
-        :param fit_meth:
         :param imputation:
         :return:
         """
@@ -127,6 +123,7 @@ class methyl_age:
     
         if clock == 'Horvath_2013':
             self.log.info('Preprocess Horvath2013 clock')
+            # BMIQ is not needed (?) for WGBS?
             #cpgs = preprocess.horvath2013(self.cpgs, normalizeData=True)
     
         '''
@@ -156,11 +153,6 @@ class methyl_age:
                 imputation = False
                 log.warning('When clock == Lu clocks, imputation is set to False')
         '''
-        """
-        # Free the Y limits in plotting
-        if clock in ('YangZ2016', 'ZhangY2017', 'LuA2019', 'FuentealbaM2025'):
-            y_lim = None
-        """
 
         clock_data = self.clocks.get(clock)
         
@@ -185,8 +177,12 @@ class methyl_age:
             # simple impute: fill with 0.5
             for missing_probe in missing_probes:
                 coef = clock_data['coef'].getRowsByKey(key='id', values=missing_probe, silent=True)[0]['coef']
-                missing_data = clock_data['goldstandard'].getRowsByKey(key='id', values=missing_probe, silent=True)[0]['goldstandard']
-                matched.linearData.append({'id': missing_probe, 'coef': coef, 'score': [missing_data] * num_conds})
+                missing_data = clock_data['goldstandard'].getRowsByKey(key='id', values=missing_probe, silent=True)
+                if missing_data:
+                    missing_data = missing_data[0]['goldstandard']
+                else:
+                    missing_data = 0.5
+                matched.linearData.append({'id': missing_probe, 'coef': coef, 'conditions': [missing_data] * num_conds})
             matched._optimiseData()
 
         elif percent_clock_probes_matched < 90:
@@ -280,10 +276,9 @@ class methyl_age:
         
         x = self.final_data['predage']
         y = self.final_data['actual_age']
-        
-        ax.scatter(x, y)
 
-        ax.plot([0, 100], [0, 100],  c='lightgrey')
+        ax.plot([0, 100], [0, 100],  ls=':', c='lightgrey')
+        ax.scatter(x, y)
 
         ax.set_xlim([0,100])
         ax.set_ylim([0,100])

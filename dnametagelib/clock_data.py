@@ -4,8 +4,6 @@ from . import miniglbase
 import numpy
 
 clock_files = {
-    #https://static-content.springer.com/esm/art%3A10.1186%2Fgb-2013-14-10-r115/MediaObjects/13059_2013_3156_MOESM3_ESM.csv # coefficients;
-    #https://static-content.springer.com/esm/art%3A10.1186%2Fgb-2013-14-10-r115/MediaObjects/13059_2013_3156_MOESM22_ESM.csv # reference featurs
     'Horvath_2013': {
         'coef': {
             'filename': "data/13059_2013_3156_MOESM3_ESM.csv.gz",
@@ -20,12 +18,6 @@ clock_files = {
             'postprocess': None,
             },
         },
-    
-    'GrimAge2': {
-        'coef': None,
-        'goldstandard': None
-    },
-
 }
 
 class clocks: 
