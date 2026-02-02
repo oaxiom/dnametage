@@ -123,6 +123,7 @@ class methyl_age:
         self.is_beta = True
         self.x_lim = [0, 100] # suggested sizes for scatters
         self.y_lim = [0, 100]
+        self.clock_used = clock
     
         if clock == 'Horvath_2013':
             self.log.info('Preprocess Horvath2013 clock')
@@ -160,33 +161,7 @@ class methyl_age:
         if clock in ('YangZ2016', 'ZhangY2017', 'LuA2019', 'FuentealbaM2025'):
             y_lim = None
         """
-        """
-        
-        if self.is_beta:
-            # This is the intersect
-            r_coefs = coefs
-            # data('HorvathS2013')
-            coefs = setNames(coefs.Coefficient, coefs.Probe)
-            ## add intercept
-            betas = rbind(betas, intercept=1)
-    
-            ## identify missing probes, set their beta values as 0.5
-            betas = betas[rownames(betas) in names(coefs), ]
-            missing_probe = setdiff(names(coefs), rownames(betas))
-            if len(missing_probe) > 0:
-                log.warning("Found ", len(missing_probe), "out of", len(coefs), "probes missing! They will be assigned with mean values from reference dataset, missing probes are:\n ", missing_probe)
-        """
-        """
-        if imputation:
-            ## Mean imputation
-            data(list='golden_ref', envir=environment())
-            ref_mean = setNames(golden_ref.Mean, rownames(golden_ref))
-            ref_mean = ref_mean[names(ref_mean) in names(coefs)]
-            betas = mean_imputation(mt=betas, ref=ref_mean, only_ref_rows=FALSE)
-        else:
-            betas[betas != None] = 0
-        """
-    
+
         clock_data = self.clocks.get(clock)
         
         print(clock_data['coef'])
@@ -194,11 +169,25 @@ class methyl_age:
         # get only the matching ids;
         matched = clock_data['coef'].map(genelist=self.cpgs, key='id') # This will delete the intercept row
 
-        # TODO Sanity checking for decent overlap %
-
+        # Sanity check:
         percent_clock_probes_matched = (len(matched) / len(clock_data['coef'])) * 100
         self.log.info(f'{percent_clock_probes_matched:.1f}% probes matched')
-        if percent_clock_probes_matched < 90:
+
+        if imputation:
+            self.log.info('Imputing missing probes')
+            # missing probes;
+            print(clock_data['goldstandard'])
+            found_probes = set(matched['id'])
+            all_probes = set(clock_data['coef']['id'])
+            missing_probes = all_probes - found_probes
+            self.log.info(f'Missing probes = {len(missing_probes)}')
+            # simple impute: fill with 0.5
+            for missing_probe in missing_probes:
+                coef = clock_data['coef'].getRowsByKey(key='id', values=missing_probe, silent=True)[0]['coef']
+                missing_data = clock_data['goldstandard'].getRowsByKey(key='id', values=missing_probe, silent=True)[0]['goldstandard']
+                matched.linearData.append({'id': missing_probe, 'coef': coef, 'score': [missing_data] * num_conds})
+
+        elif percent_clock_probes_matched < 90:
             self.log.warning('Less than 90% of probes matched!')
             self.log.warning('Suggest imputation of missing probes')
 
@@ -294,7 +283,13 @@ class methyl_age:
         
         ax.set_xlim([0,100])
         ax.set_ylim([0,100])
-        
+
+        ax.set_xlabel('Predicted Age')
+        ax.set_ylabel('Chronological Age')
+        ax.set_title(self.clock_used)
+
+        ax.plot([0,100], [0,100], ls=':', c='lightgrey')
+
         self.draw.savefigure(fig, filename)
         
         
